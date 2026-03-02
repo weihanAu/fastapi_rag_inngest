@@ -1,8 +1,10 @@
+from typing import Annotated
+from fastapi import Depends
 from qdrant_client import QdrantClient
 from qdrant_client.models import PointStruct, Distance, VectorParams
 
 class QdrantStorage:
-    def __init__(self,url="http://localhost:6333",collection="docs",dim=1024):
+    def __init__(self,url="http://localhost:6333",collection="docs",dim=1024,):
             self.client = QdrantClient(url=url,timeout=30)
             self.collection = collection
             if not self.client.collection_exists( self.collection):
@@ -39,3 +41,9 @@ class QdrantStorage:
                 contexts.append(text)
                 sources.add(source)
         return {"contexts": contexts, "sources": list(sources)}
+    
+
+def get_QdrantStorage() -> QdrantStorage:
+    return QdrantStorage()
+
+get_QdrantStorage_dependency = Annotated[QdrantStorage, Depends(get_QdrantStorage)]

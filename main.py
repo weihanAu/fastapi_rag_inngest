@@ -7,10 +7,11 @@ from dotenv import load_dotenv
 import uuid
 import os
 import datetime
+
+from openai import BaseModel
 from data_loader import load_and_chunk_pdf, embed_texts
 from custom_types.custom_types import RAGChunkAndSrc, RAGUpsertResult, RAGSerchResult
 from vector_db import QdrantStorage
-
 
 "# load dotenv"
 load_dotenv()
@@ -97,5 +98,19 @@ async def rag_query_pdf_ai(ctx:inngest.Context):
     return {"answer": answer, "sources": found.sources}
 
 app = FastAPI()
+
+class Message(BaseModel):
+    message: str
+    
+@app.post("/query")
+async def health(message:Message):
+   
+    await inngest_client.send(
+        inngest.Event(
+         name="rag/query_pdf_ai",
+         data={"question": message.message, "top_k": 5}
+        )
+    )
+    return {"status": "received"}
 
 inngest.fast_api.serve(app, inngest_client,[rag_ingest_pdf, rag_query_pdf_ai])
